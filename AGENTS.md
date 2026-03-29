@@ -2,18 +2,19 @@
 
 ## Brief
 
-**MarkItDown Browser** is a client-side document conversion tool that transforms various document formats (PDF, DOCX, HTML, PPTX, XLSX, MSG) into clean Markdown. The application runs entirely in the browser using React, TypeScript, and Vite, with no server-side processing required.
+**MarkItDown Browser Extension** is a browser extension that transforms various document formats (PDF, DOCX, HTML, PPTX, XLSX, MSG) into clean Markdown. The conversion runs entirely in the browser using React, TypeScript, and Vite, with no server-side processing required.
 
 **Core Requirements:**
 - Convert multiple document formats to Markdown
 - Pure browser-based processing (client-side only)
 - Support drag-and-drop file uploads
 - Provide real-time preview of converted Markdown
-- Maintain high performance with large files
+- Function as a browser extension for easy access
 
 **Goals:**
 - Deliver a fast, responsive user interface
 - Ensure reliable conversion across all supported formats
+- Provide seamless browser extension integration
 - Keep dependencies minimal and well-maintained
 
 ---
@@ -21,22 +22,23 @@
 ## Product
 
 **Purpose:**
-MarkItDown Browser exists to provide a simple, privacy-focused tool for converting documents to Markdown without uploading files to a server. All processing happens locally in the user's browser.
+MarkItDown Browser Extension provides a privacy-focused tool for converting documents to Markdown directly in your browser. All processing happens locally—no uploads to servers required.
 
 **Problems Solved:**
 - Eliminates privacy concerns of uploading sensitive documents to cloud services
 - Works offline once loaded
 - Provides instant conversion without network latency
 - Supports multiple common document formats in one interface
+- Accessible directly from browser toolbar
 
 **How It Works:**
-1. User uploads files via drag-and-drop or file picker
+1. User clicks the extension icon or drags files into the popup
 2. The appropriate converter (based on file type) processes the file in memory
 3. Extracted text is formatted as Markdown
 4. User can preview, copy, or download the Markdown output
 
 **User Experience Goals:**
-- Clean, intuitive interface using Tailwind CSS and shadcn/ui components
+- Clean, intuitive popup interface using Tailwind CSS and shadcn/ui components
 - Immediate feedback during conversion (loading states, error messages)
 - Clear error handling with helpful messages
 - Responsive design for different screen sizes
@@ -46,41 +48,26 @@ MarkItDown Browser exists to provide a simple, privacy-focused tool for converti
 ## Context
 
 **Current Work Focus:**
-- Fixing PDF conversion issues related to PDF.js worker loading
-- Ensuring all converters work reliably in browser environment
+- Building and testing the browser extension functionality
+- Ensuring all converters work reliably in extension environment
 - Maintaining code quality and TypeScript type safety
 
 **Recent Changes:**
-- **Improved Markdown info tooltip UX** (2025-03-28): Moved "what is markdown?" prompt from footer to appear when clicking "Markdown" text in header subheading.
-  - Removed "About Markdown" button from footer
-  - Made "Markdown" text clickable with hyperlink styling in header
-  - Added tooltip with black background and white text for better visibility
-  - Implemented drag event handling to close tooltip when files are being dragged
-  - Used `dragenter` event with file type detection to close tooltip during drag operations
-  - Added high z-index (`z-[99999]`) to ensure tooltip appears above all elements
-  - Improved list alignment with `list-outside` and proper left margin
-- **Added Outlook .msg converter** (2025-03-28): Implemented `OutlookMsgConverter` using `@kenjiuno/msgreader` library to convert Outlook message files to Markdown.
-  - Created `src/converters/OutlookMsgConverter.ts`
-  - Added `.msg` MIME type mapping in `fileDetection.ts`
-  - Registered converter in `MarkItDown.ts`
-  - Added `vite-plugin-node-polyfills` to handle Node.js core module dependencies in browser
-- **Fixed PDF.js worker loading** (2025-03-25): Changed from CDN-based worker to locally bundled worker using Vite's worker import. This resolves CORS/network errors when converting PDF files.
-  - Modified `src/converters/PdfConverter.ts` to import `pdfjs-dist/build/pdf.worker.mjs?worker&url`
-  - Set `GlobalWorkerOptions.workerSrc` to the bundled worker URL
-  - Vite config already had manual chunking for the worker
+- Initial extension setup and configuration
+- Implemented core document converters (PDF, DOCX, XLSX, PPTX, HTML, MSG)
+- Set up Vite build configuration for browser extension packaging
 
 **Next Steps:**
-- Test PDF conversion with various PDF files to ensure robustness
-- Monitor for any other converter-specific issues
-- Consider adding more document format support if needed
-- Potentially add conversion progress indicators for large files
+- Test the extension in various browsers
+- Add extension manifest and icons
+- Consider additional document format support if needed
 
 ---
 
 ## Architecture
 
 **System Architecture:**
-- Single-page application (SPA) built with React 18
+- Browser extension popup built with React 18
 - TypeScript for type safety
 - Vite for fast development and optimized production builds
 - Component-based architecture with clear separation of concerns
@@ -113,7 +100,7 @@ src/
 **Key Technical Decisions:**
 - **Client-side only**: No backend required, improves privacy and reduces infrastructure
 - **Dynamic imports for converters**: Each converter is loaded on-demand to reduce initial bundle size
-- **Vite manual chunking**: Separate chunks for heavy dependencies (pdf-worker, xlsx, jszip) to optimize loading
+- **Vite build optimization**: Separate chunks for heavy dependencies (pdf-worker, xlsx, jszip) to optimize loading
 - **ES modules**: Using modern JavaScript modules for better tree-shaking
 
 **Design Patterns:**
@@ -153,25 +140,24 @@ src/
 ```bash
 npm install
 npm run dev      # Start development server
-npm run build    # Production build
+npm run build    # Production build for browser extension
 npm run preview  # Preview production build
 ```
 
 **Technical Constraints:**
 - Must run entirely in the browser (no server-side code)
 - File processing happens in memory (limited by browser memory)
-- Large files may cause performance issues (need to test limits)
-- PDF.js worker must be bundled to avoid CORS issues (solved)
+- Large files may cause performance issues
+- PDF.js worker must be bundled to avoid CORS issues
 
 **Dependencies:**
 - Production: See `package.json` for full list
-- All dependencies are npm packages except xlsx which uses CDN tarball
+- All dependencies are npm packages
 - pdfjs-dist worker is bundled via Vite with `?worker&url` import
 
 **Tool Usage Patterns:**
 - Vite for HMR and optimized builds
 - TypeScript strict mode enabled
-- ESLint/Prettier (if configured - check project setup)
 - Git for version control
 
 **Known Issues & Solutions:**
