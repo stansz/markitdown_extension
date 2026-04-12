@@ -1,7 +1,6 @@
 import { DocumentConverter } from '../core/types';
 import type { DocumentConverterResult, StreamInfo } from '../core/types';
 import { mimeTypeMatches, extensionMatches } from '../utils/fileDetection';
-import pdfjsWorkerUrl from 'pdfjs-dist/build/pdf.worker.mjs?worker&url';
 
 const ACCEPTED_MIME_TYPE_PREFIXES = ['application/pdf'];
 const ACCEPTED_FILE_EXTENSIONS = ['.pdf'];
@@ -36,8 +35,17 @@ export class PdfConverter extends DocumentConverter {
     // Dynamically import pdf.js
     const pdfjs = await import('pdfjs-dist');
 
-    // Set up the worker using the locally bundled worker
-    pdfjs.GlobalWorkerOptions.workerSrc = pdfjsWorkerUrl;
+    // Resolve worker URL — extension context uses chrome.runtime.getURL,
+    // web/SPA context falls back to direct URL resolution
+    if (typeof chrome !== 'undefined' && chrome.runtime?.getURL) {
+      pdfjs.GlobalWorkerOptions.workerSrc = chrome.runtime.getURL('assets/pdf.worker.mjs');
+    } else {
+      // Fallback for web/SPA mode
+      pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+        'pdfjs-dist/build/pdf.worker.mjs',
+        import.meta.url
+      ).toString();
+    }
 
     // Load the PDF document
     const pdf = await pdfjs.getDocument({ data: fileStream }).promise;
