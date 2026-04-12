@@ -66,43 +66,6 @@ function App() {
     }
   }, [showPrivacyPopover, showMarkdownInfoPopover])
 
-  // Clear cache/storage on mount to force fresh load
-  useEffect(() => {
-    const clearCache = async () => {
-      try {
-        // Clear localStorage
-        if (typeof window !== 'undefined' && window.localStorage) {
-          window.localStorage.clear();
-          console.log('[App] localStorage cleared');
-        }
-        
-        // Clear IndexedDB
-        if (typeof window !== 'undefined' && window.indexedDB) {
-          const databases = await window.indexedDB.databases();
-          for (const db of databases) {
-            if (db.name) {
-              await window.indexedDB.deleteDatabase(db.name);
-            }
-          }
-          console.log('[App] IndexedDB cleared');
-        }
-        
-        // Clear Service Workers
-        if (typeof window !== 'undefined' && 'serviceWorker' in window) {
-          const registrations = await window.navigator.serviceWorker.getRegistrations();
-          for (const registration of registrations) {
-            await registration.unregister();
-          }
-          console.log('[App] Service workers cleared');
-        }
-      } catch (err) {
-        console.error('[App] Error clearing cache:', err);
-      }
-    };
-    
-    clearCache();
-  }, []);
-
   const handleFilesSelected = async (selectedFiles: File[]) => {
     const newFiles: FileResult[] = selectedFiles.map(file => ({
       file,
@@ -370,7 +333,7 @@ function App() {
 
               {/* GitHub link */}
               <a
-                href="https://github.com/stansz/sz_markitdown"
+                href="https://github.com/stansz/markitdown_extension"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/5 hover:bg-primary/10 border border-primary/10 hover:border-primary/20 transition-all duration-300 group"
