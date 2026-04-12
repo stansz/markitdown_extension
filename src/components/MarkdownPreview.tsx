@@ -1,18 +1,21 @@
+import { useMemo } from 'react';
 import { marked } from 'marked';
+import DOMPurify from 'dompurify';
 
 interface MarkdownPreviewProps {
   markdown: string;
 }
 
 export function MarkdownPreview({ markdown }: MarkdownPreviewProps) {
-  // Configure marked options
   marked.setOptions({
     breaks: true,
     gfm: true,
   });
 
-  // Convert markdown to HTML
-  const html = marked.parse(markdown) as string;
+  const html = useMemo(() => {
+    const raw = marked.parse(markdown) as string;
+    return DOMPurify.sanitize(raw);
+  }, [markdown]);
 
   return (
     <div className="border-2 rounded-2xl overflow-hidden shadow-sm bg-card/80 backdrop-blur-sm">

@@ -14,9 +14,11 @@
   },
   "dependencies": {
     "@kenjiuno/msgreader": "^1.2.0",
+    "@rollup/rollup-linux-x64-gnu": "^4.60.1",
     "buffer": "^6.0.3",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
+    "dompurify": "^3.3.3",
     "events": "^3.3.0",
     "jszip": "^3.10.1",
     "lucide-react": "^0.400.0",
@@ -32,15 +34,17 @@
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
   },
   "devDependencies": {
+    "@types/chrome": "^0.1.40",
+    "@types/dompurify": "^3.0.5",
     "@types/node": "^25.6.0",
     "@types/react": "^18.3.28",
     "@types/react-dom": "^18.3.7",
     "@vitejs/plugin-react": "^4.7.0",
-    "autoprefixer": "^10.4.19",
-    "postcss": "^8.4.39",
-    "tailwindcss": "^3.4.6",
+    "autoprefixer": "^10.4.27",
+    "postcss": "^8.5.9",
+    "tailwindcss": "^3.4.19",
     "typescript": "^5.9.3",
-    "vite": "^5.3.5",
+    "vite": "^5.4.21",
     "vite-plugin-node-polyfills": "^0.25.0"
   }
 }
