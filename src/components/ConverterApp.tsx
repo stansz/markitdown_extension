@@ -14,20 +14,20 @@ export interface FileResult {
 }
 
 export interface ConverterAppProps {
-  /** Compact mode for side panel (hides footer, reduces padding) */
+  /** Compact mode for side panel (smaller header, no footer, tighter spacing) */
   compact?: boolean;
-  /** Called when files are received from external sources (context menu, messages) */
-  onExternalFile?: (file: File) => void;
 }
 
 /**
  * Shared converter UI used by both sidepanel and window entry points.
  * Handles the full file → convert → preview → copy/download flow.
+ * Also handles files from context menu via chrome.runtime messages.
  */
-export function ConverterApp({ compact = false, onExternalFile }: ConverterAppProps) {
+export function ConverterApp({ compact = false }: ConverterAppProps) {
   const [files, setFiles] = useState<FileResult[]>([]);
   const [selectedFileIndex, setSelectedFileIndex] = useState<number | null>(null);
   const [converter] = useState(() => new MarkItDown());
+
   const [darkMode, setDarkMode] = useState(() => {
     if (typeof window !== 'undefined') {
       return window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -45,23 +45,6 @@ export function ConverterApp({ compact = false, onExternalFile }: ConverterAppPr
     }
   }, [darkMode]);
 
-  // Listen for external files from context menu / background messages
-  useEffect(() => {
-    if (!onExternalFile) return;
-
-    const handleMessage = (message: { type: string; fileData?: ArrayBuffer; fileName?: string }) => {
-      if (message.type === 'convert-file' && message.fileData && message.fileName) {
-        const file = new File([message.fileData], message.fileName);
-        onExternalFile(file);
-      }
-    };
-
-    if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
-      chrome.runtime.onMessage.addListener(handleMessage);
-      return () => chrome.runtime.onMessage.removeListener(handleMessage);
-    }
-  }, [onExternalFile]);
-
   const convertFile = useCallback(async (file: File, index: number) => {
     try {
       const result = await converter.convert(file);
@@ -70,7 +53,6 @@ export function ConverterApp({ compact = false, onExternalFile }: ConverterAppPr
         updated[index] = { ...updated[index], result, loading: false };
         return updated;
       });
-      // Auto-select first successful conversion
       setSelectedFileIndex(prev => prev === null ? index : prev);
     } catch (err) {
       setFiles(prev => {
@@ -95,7 +77,6 @@ export function ConverterApp({ compact = false, onExternalFile }: ConverterAppPr
 
     setFiles(prev => {
       const startIndex = prev.length;
-      // Process each file after state update
       for (let i = 0; i < selectedFiles.length; i++) {
         convertFile(selectedFiles[i], startIndex + i);
       }
@@ -103,12 +84,27 @@ export function ConverterApp({ compact = false, onExternalFile }: ConverterAppPr
     });
   }, [convertFile]);
 
-  // Allow external files to be injected
+  // Handle files from background script (context menu conversions)
   useEffect(() => {
-    if (onExternalFile) {
-      onExternalFile;
-    }
-  }, [onExternalFile]);
+    if (typeof chrome === 'undefined' || !chrome.runtime?.onMessage) return;
+
+    const handleMessage = (message: {
+      type: string;
+      fileData?: ArrayBuffer;
+      fileName?: string;
+      mimeType?: string;
+    }) => {
+      if (message.type === 'convert-file' && message.fileData && message.fileName) {
+        const file = new File([message.fileData], message.fileName, {
+          type: message.mimeType || 'application/octet-stream',
+        });
+        handleFilesSelected([file]);
+      }
+    };
+
+    chrome.runtime.onMessage.addListener(handleMessage);
+    return () => chrome.runtime.onMessage.removeListener(handleMessage);
+  }, [handleFilesSelected]);
 
   const handleRemoveFile = (index: number) => {
     setFiles(prev => prev.filter((_, i) => i !== index));
@@ -121,14 +117,12 @@ export function ConverterApp({ compact = false, onExternalFile }: ConverterAppPr
 
   const selectedFile = selectedFileIndex !== null ? files[selectedFileIndex] : null;
 
-  const pad = compact ? 'p-3' : 'px-4 py-5';
-
   return (
     <div className="h-full flex flex-col bg-background">
       {/* Header */}
-      <header className="relative border-b bg-card/60 backdrop-blur-md z-40">
+      <header className="relative border-b bg-card/60 backdrop-blur-md z-40 flex-shrink-0">
         <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
-        <div className={`${compact ? 'px-3 py-3' : 'container mx-auto px-4 py-4'}`}>
+        <div className={`${compact ? 'px-3 py-2.5' : 'container mx-auto px-4 py-4'}`}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="relative">
@@ -175,7 +169,7 @@ export function ConverterApp({ compact = false, onExternalFile }: ConverterAppPr
       </header>
 
       {/* Main content */}
-      <main className={`${pad} flex-1 overflow-y-auto`}>
+      <main className={`${compact ? 'p-3' : 'container mx-auto px-4 py-6'} flex-1 overflow-y-auto`}>
         {files.length === 0 ? (
           <div className="flex items-center justify-center" style={{ minHeight: compact ? '200px' : '60vh' }}>
             <div className="w-full">
@@ -240,7 +234,7 @@ export function ConverterApp({ compact = false, onExternalFile }: ConverterAppPr
 
       {/* Footer — hidden in compact mode */}
       {!compact && (
-        <footer className="border-t bg-card/50">
+        <footer className="border-t bg-card/50 flex-shrink-0">
           <div className="container mx-auto px-4 py-3">
             <div className="flex items-center justify-between gap-3">
               <p className="text-xs text-muted-foreground">
