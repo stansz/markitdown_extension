@@ -1,8 +1,8 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { nodePolyfills } from 'vite-plugin-node-polyfills'
+import { resolve } from 'path'
 
-// https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
     react(),
@@ -19,12 +19,20 @@ export default defineConfig({
     exclude: ['lucide-react'],
   },
   build: {
+    outDir: 'dist',
+    emptyOutDir: true,
     target: 'esnext',
     rollupOptions: {
+      input: {
+        popup: resolve(__dirname, 'popup.html'),
+        sidepanel: resolve(__dirname, 'sidepanel.html'),
+        window: resolve(__dirname, 'window.html'),
+        background: resolve(__dirname, 'src/entries/background.ts'),
+      },
       output: {
-        manualChunks: {
-          'pdf-worker': ['pdfjs-dist/build/pdf.worker.mjs'],
-        },
+        entryFileNames: '[name].js',
+        chunkFileNames: 'chunks/[name]-[hash].js',
+        assetFileNames: 'assets/[name].[ext]',
       },
     },
   },
