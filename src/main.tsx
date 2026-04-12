@@ -1,4 +1,4 @@
-// Polyfill for Node.js globals needed by docling-sdk
+// Polyfill for Node.js globals needed by converter libraries
 if (typeof window !== 'undefined') {
   (window as any).process = { env: {} };
 }
